@@ -16,6 +16,18 @@ Also in this folder:
 - [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) (check with `dotnet --list-sdks`)
 - SQL Server: LocalDB (comes with Visual Studio), a local or Docker SQL Server, or Azure SQL
 
+### No SQL Server? Quick start with SQLite
+
+To try the app without installing SQL Server:
+
+```bash
+cd BE
+dotnet run --project src/TicketTracker.Api --launch-profile sqlite
+```
+
+This stores the data in a local file, `src/TicketTracker.Api/tickets-dev.db` (git-ignored); delete the file to start fresh.
+It is for demos and local development only. **SQL Server is the real database**, and steps 1–2 below use it.
+
 ### 1. Set the connection string
 
 The API reads `ConnectionStrings:TicketTracker`. The default in

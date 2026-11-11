@@ -22,11 +22,24 @@ builder.Services.AddProblemDetails();
 
 builder.Services.AddOpenApi();
 
-var connectionString = builder.Configuration.GetConnectionString("TicketTracker")
-    ?? throw new InvalidOperationException("Connection string 'TicketTracker' is not configured.");
+// SQL Server is the real database. "Sqlite" is a zero-install fallback for running the app
+// on a machine without SQL Server (demo / local dev only): data goes to a local file.
+var useSqlite = string.Equals(
+    builder.Configuration["Database:Provider"], "Sqlite", StringComparison.OrdinalIgnoreCase);
 
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(connectionString, sql => sql.EnableRetryOnFailure()));
+if (useSqlite)
+{
+    var sqlitePath = builder.Configuration.GetConnectionString("Sqlite") ?? "Data Source=tickets-dev.db";
+    builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlite(sqlitePath));
+}
+else
+{
+    var connectionString = builder.Configuration.GetConnectionString("TicketTracker")
+        ?? throw new InvalidOperationException("Connection string 'TicketTracker' is not configured.");
+
+    builder.Services.AddDbContext<AppDbContext>(options =>
+        options.UseSqlServer(connectionString, sql => sql.EnableRetryOnFailure()));
+}
 
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<ITicketService, TicketService>();
@@ -63,7 +76,13 @@ app.UseCors(CorsPolicy);
 app.MapControllers();
 app.MapHealthChecks("/health");
 
-if (app.Configuration.GetValue<bool>("Database:ApplyMigrationsOnStartup"))
+if (useSqlite)
+{
+    // The migrations are SQL Server-specific, so the SQLite fallback creates the schema directly.
+    await using var scope = app.Services.CreateAsyncScope();
+    await scope.ServiceProvider.GetRequiredService<AppDbContext>().Database.EnsureCreatedAsync();
+}
+else if (app.Configuration.GetValue<bool>("Database:ApplyMigrationsOnStartup"))
 {
     // Convenient for local dev and docker-compose. In production, migrations should run
     // as a separate deployment step (e.g. an idempotent script or migration bundle).
