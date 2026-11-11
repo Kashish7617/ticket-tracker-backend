@@ -1,0 +1,8 @@
+# Bonus — LLM-suggested priority and summary
+
+1. **Where:** server-side only. `POST /api/tickets` saves the ticket immediately and enqueues a job. A background worker (`BackgroundService` or Azure Function + Service Bus) calls the LLM and stores `SuggestedPriority`, `AiSummary` and `AiStatus`, so creating a ticket never waits on, or fails because of, the LLM.
+2. **Prompt:** a fixed system prompt with a priority rubric and a few examples. Title and description go inside delimited tags, marked as untrusted data to ignore instructions from (prompt-injection defence). Output is forced to a JSON schema `{priority: low|medium|high, summary: ≤200 chars}` via structured output / tool calling.
+3. **Validation:** reject anything outside the enum, cap the summary length, and show the result as a *suggestion* the agent accepts or overrides. Never silently overwrite a human-set priority. Track accept/override rates to tune the prompt.
+4. **Errors and slowness:** ~10 s timeout, retry with backoff and jitter on 429/5xx, circuit breaker (`AddStandardResilienceHandler`), dead-letter after N failures. The UI shows "suggestion pending" and updates by polling or SignalR. If it fails, the ticket just has no suggestion.
+5. **Cost:** a small, fast model; truncate long descriptions and cap `max_tokens`; skip the call when the content hash is unchanged; prompt-cache the static system prompt; a per-tenant daily budget with alerts, and log token usage per ticket.
+6. **Customer data:** scrub PII (emails, phones, card/account numbers) before sending. Use a zero-retention, no-training enterprise endpoint in an approved region (e.g. Azure OpenAI in our tenant). Keep the key in Key Vault, give each customer an opt-out, and never log raw prompts or completions.
