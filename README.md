@@ -1,5 +1,7 @@
 # Support Ticket Tracker: Backend (API)
 
+[![CI](https://github.com/Kashish7617/ticket-tracker-backend/actions/workflows/ci.yml/badge.svg)](https://github.com/Kashish7617/ticket-tracker-backend/actions/workflows/ci.yml)
+
 
 REST API for a support ticket tracker, built with **ASP.NET Core Web API (.NET 10 LTS)**, **EF Core 10** and **SQL Server**, with xUnit integration tests.
 
@@ -286,3 +288,9 @@ scripts/migrate.sql                  Idempotent migration script
 4. **Observability:** OpenTelemetry, structured logs with correlation ids, and a database health check.
 5. **Delivery:** migrations as a separate pipeline step (`dotnet ef migrations bundle`) instead of at startup.
 6. **Audit trail** of status changes, and **rate limiting** on write endpoints.
+
+---
+
+## CI
+
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs on every push and pull request: restore → build → test → check that no EF model change is missing a migration.
