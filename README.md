@@ -9,10 +9,20 @@ REST API for a support ticket tracker, built with **ASP.NET Core Web API (.NET 1
 - [`REVIEW.md`](REVIEW.md): Part 2 code review (C# and SQL samples)
 - [`BONUS.md`](BONUS.md): Bonus LLM integration design
 
+## Live demo
+
+| | URL |
+|---|---|
+| App (Vercel) | https://ticket-tracker-frontend-psi.vercel.app |
+| API (Render) | https://ticket-tracker-backend-5cke.onrender.com/api/tickets |
+
+> The API runs on Render's free plan and sleeps when idle, so the first request can take 30–50 seconds.
+
 ---
 
 ## Contents
 
+- [Live demo](#live-demo)
 - [Features](#features)
 - [Tech stack](#tech-stack)
 - [Getting started](#getting-started)
@@ -279,6 +289,8 @@ scripts/migrate.sql                  Idempotent migration script
 - Search matches the title only, case-insensitively, as a substring.
 - Deletes are hard deletes. Any status can change to any other status (reopening is allowed).
 - The list is sorted newest first, with `Id` as a tiebreaker so paging is stable.
+- **The live demo uses SQLite, not SQL Server.** Render has no free SQL Server, so the deployed API runs in the built-in SQLite mode (`Database__Provider=Sqlite`). SQL Server is still the default provider, and the EF Core migrations and `scripts/migrate.sql` target SQL Server. Locally and in docker-compose the app runs on SQL Server.
+- **Hosted on Render + Vercel instead of Azure.** Azure was listed as a nice-to-have. Moving to Azure App Service + Azure SQL only needs the `ConnectionStrings__TicketTracker` setting and a migration step.
 
 ## Future improvements
 
